@@ -1,3 +1,8 @@
+# local scratch directories
+examples*
+HPCC-Platform*
+src/test*.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
