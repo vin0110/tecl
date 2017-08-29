@@ -45,6 +45,8 @@ def emitTempfile(tempdir, module_name, entry_point, inputs):
 class Result:
     def __init__(self, return_code, output=[]):
         self.return_code = return_code
+        if len(output) > 0 and not output[-1]:
+            del output[-1]
         self.output = output
 
     def __str__(self):
@@ -89,6 +91,7 @@ class EclTestCase(TestCase):
         compile = subprocess.run(cmd_list, stdout=PIPE, stderr=PIPE,
                                  timeout=60)
         if compile.returncode != 0:
+            print('testing code saved in', tempdir)
             raise KeyError('COMPILATION ERROR', compile.stderr)
 
         # execute program
@@ -96,14 +99,15 @@ class EclTestCase(TestCase):
         test_exec = subprocess.run([exec_name, ],
                                    stdout=PIPE, stderr=PIPE,
                                    timeout=getattr(self, 'timeout', 60))
-        if test_exec.returncode != 0:
-            raise self.test_case.failureException(test_exec.stderr)
 
         if getattr(self, 'cleanup', True):
-            print('cleaning up', tempdir)
+            # print('cleaning up', tempdir)
             shutil.rmtree(tempdir, ignore_errors=True)
         else:
             print('testing code saved in', tempdir)
+
+        if test_exec.returncode != 0:
+            raise self.test_case.failureException(test_exec.stderr)
 
         return Result(test_exec.returncode, test_exec.stdout.split(b'\n'))
 

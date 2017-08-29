@@ -6,7 +6,8 @@ EXPORT inclist := MODULE
     EXPORT rec increment(rec in) := TRANSFORM
 	self.val := in.val + 1;
     END;
-    EXPORT increment_list(set ds) := PROJECT(DATASET(ds, rec), increment(LEFT));
+    EXPORT increment_list(set ints) :=
+      PROJECT(DATASET(ints, rec), increment(LEFT));
 END;
 
 /*
