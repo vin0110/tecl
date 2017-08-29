@@ -1,5 +1,5 @@
 # local scratch directories
-examples*
+temp*
 HPCC-Platform*
 src/test*.py
 

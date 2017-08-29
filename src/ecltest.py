@@ -42,6 +42,15 @@ def emitTempfile(tempdir, module_name, entry_point, inputs):
     return fp.name
 
 
+class Result:
+    def __init__(self, return_code, output=[]):
+        self.return_code = return_code
+        self.output = output
+
+    def __str__(self):
+        return "{}:{}".format(self.return_code, self.output)
+
+
 class EclTestCase(TestCase):
     def setUp(self):
         # do ecl stuff
@@ -77,10 +86,10 @@ class EclTestCase(TestCase):
 
         # compile program
         logger.debug('compiling: %s', ' '.join(cmd_list))
-        compile = subprocess.run(cmd_list,
-                                 stdout=PIPE, timeout=60)
+        compile = subprocess.run(cmd_list, stdout=PIPE, stderr=PIPE,
+                                 timeout=60)
         if compile.returncode != 0:
-            raise SkipTest('compiling')
+            raise KeyError('COMPILATION ERROR', compile.stderr)
 
         # execute program
         logger.debug('executing: %s', exec_name)
@@ -95,7 +104,8 @@ class EclTestCase(TestCase):
             shutil.rmtree(tempdir, ignore_errors=True)
         else:
             print('testing code saved in', tempdir)
-        return test_exec.stdout
+
+        return Result(test_exec.returncode, test_exec.stdout.split(b'\n'))
 
     def run(self, result=None):
         logger.debug('running test')
@@ -110,5 +120,9 @@ class EclTestCase(TestCase):
         result.startTest(self)
 
         testMethod = getattr(self, self._testMethodName)
-        testMethod()
+        try:
+            testMethod()
+        except KeyError as e:
+            print(e.args[0])
+            print('\n'.join(b.decode('ascii') for b in e.args[1].split(b'\n')))
         result.stopTest(self)
